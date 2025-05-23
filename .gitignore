@@ -1,0 +1,16 @@
+logs/
+vosk-model-small-ru-0.22/
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+.env
+.env.local
+.env*.local
+pip-selfcheck.json
