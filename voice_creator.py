@@ -205,6 +205,13 @@ class VoiceTableCreator:
                 self.table.current_row += 1
             self.logger.info(f"Восстановлена удаленная строка {row + 1}")
 
+        elif action[0] == 'insert_row':
+            row = action[1]
+            self.table.data.pop(row)
+            if row < self.table.current_row:
+                self.table.current_row -= 1
+            self.logger.info(f"Удалена вставленная строка {row + 1}")
+
         if self.table:
 
             if self.table.current_col == 0 and len(self.table.data) > self.table.current_row + 1 and all(val == '_' for val in self.table.data[self.table.current_row]):
@@ -224,7 +231,8 @@ class VoiceTableCreator:
         print('- выход')
         print('- редактировать строка [номер] столбец [название]')
         print('- удалить строка [номер]')
-        print('- вернуться (вернуться к последней заполненной ячейке)')
+        print('- вставь строка [номер]')
+        print('- вернуться')
         print('- помощь (показать этот список)')
         print("\nПросто произносите значения для заполнения текущей ячейки")
 
@@ -283,6 +291,20 @@ class VoiceTableCreator:
 
             elif "отмена" in command:
                 self.undo_last_action()
+            
+            elif "вставь строку" in command or "вставить строку" in command:
+                row_num = self.extract_number(command, "строка")
+                if row_num is None:
+                    print("Не удалось распознать номер строки")
+                    continue
+
+                if self.table and 1 <= row_num <= len(self.table.data) + 1:
+                    if self.table.insert_row(row_num - 1):
+                        self.history.append(('insert_row', row_num - 1))
+                        print(f"Вставлена новая строка перед строкой {row_num}")
+                        self.table.display()
+                else:
+                    print(f"Неверный номер строки (должен быть от 1 до {len(self.table.data) + 1})")
 
             elif "сохрани" in command:
                 if self.table:

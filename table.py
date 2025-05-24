@@ -84,6 +84,18 @@ class Table:
             return True
         logger.warning(f"Неверный индекс строки {row} для удаления")
         return False
+    def insert_row(self, row: int) -> bool:
+        """Вставляет новую строку перед указанной позицией"""
+        if 0 <= row <= len(self.data):
+            self.data.insert(row, ['_' for _ in range(len(self.headers))])
+            
+            if row <= self.current_row:
+                self.current_row += 1
+                
+            logger.info(f"Вставлена новая строка перед позицией {row + 1}")
+            return True
+        logger.warning(f"Неверный индекс строки {row} для вставки")
+        return False
 
     def save_to_csv(self, filename: str = None):
         import csv
