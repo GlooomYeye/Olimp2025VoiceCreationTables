@@ -82,7 +82,6 @@ class Table:
             self.data.pop(row)
             if row < self.current_row:
                 self.current_row -= 1
-            # Если удалили последнюю строку, создаем новую пустую
             if not self.data:
                 self.new_row()
             self.logger.info(f"Удалена строка {row + 1}")
@@ -108,7 +107,6 @@ class Table:
 
         if filename is None:
             filename = f"{self.name}.csv"
-        # Сохраняем без пустой последней строки
         save_data = self.data[:-1] if self.current_col == 0 else self.data
         with open(filename, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)

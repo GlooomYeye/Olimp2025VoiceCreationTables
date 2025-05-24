@@ -14,7 +14,7 @@ class VoiceTableCreator:
     def __init__(self):
         """Инициализация VoiceTableCreator с настройкой логирования, Vosk и PyAudio."""
         self.logger = logging.getLogger(__name__)
-        setup_logging(console_output=False)  # Отключаем вывод логов в консоль
+        setup_logging(console_output=False) 
         self.logger.info("Инициализация Voice Table Creator")
 
         # Инициализация модели распознавания речи
@@ -114,7 +114,7 @@ class VoiceTableCreator:
     def create_table(self, name: str, headers: List[str]):
         """Создаёт новую таблицу с указанным именем и заголовками."""
         prev_table = self.table
-        self.table = Table(name, headers, console_output=False)  # Отключаем вывод логов в консоль для таблицы
+        self.table = Table(name, headers, console_output=False) 
         self.history.append(("create", prev_table))
         print(f"\nСоздана таблица '{name}' со следующими столбцами:")
         print(", ".join(headers))
