@@ -1,38 +1,39 @@
 from dataclasses import dataclass
 from typing import List, Optional
 from tabulate import tabulate
+import logging
 from logging_config import setup_logging
-
-logger = setup_logging()
 
 @dataclass
 class Table:
     name: str
     headers: List[str]
-    data: List[List[str]]
-    current_row: int
-    current_col: int
+    data: List[List[str]] = None
+    current_row: int = 0
+    current_col: int = 0
+    logger: logging.Logger = None
     previous_position: Optional[tuple] = None
 
-    def __init__(self, name: str, headers: List[str]):
+    def __init__(self, name: str, headers: List[str], console_output: bool = False):
         self.name = name
         self.headers = headers
         self.data = []
         self.current_row = 0
         self.current_col = 0
         self.previous_position = None
+        self.logger = setup_logging(console_output=console_output)
         self.new_row()
-        logger.info(f"Создана таблица '{name}' с столбцами: {', '.join(headers)}")
+        self.logger.info(f"Создана таблица '{name}' с столбцами: {', '.join(headers)}")
 
     def new_row(self):
         """Добавляет новую строку в таблицу"""
         self.data.append(["_" for _ in range(len(self.headers))])
-        logger.debug(f"Добавлена новая строка {self.current_row + 1}")
+        self.logger.debug(f"Добавлена новая строка {self.current_row + 1}")
 
     def set_current_value(self, value: str, history_callback=None) -> bool:
         if self.current_col < len(self.headers):
             self.data[self.current_row][self.current_col] = value
-            logger.info(
+            self.logger.info(
                 f"Записано значение '{value}' в ячейку [строка {self.current_row + 1}, {self.headers[self.current_col]}]"
             )
             if value != "_":
@@ -51,7 +52,7 @@ class Table:
         self.current_row += 1
         self.current_col = 0
         self.new_row()
-        logger.info(f"Переход к новой строке {self.current_row + 1}")
+        self.logger.info(f"Переход к новой строке {self.current_row + 1}")
         return True
 
     def display(self):
@@ -71,7 +72,7 @@ class Table:
             self.previous_position = (self.current_row, self.current_col)
             self.current_row = row
             self.current_col = col
-            logger.info(f"Установлена позиция: строка {row+1}, столбец {self.headers[col]}")
+            self.logger.info(f"Установлена позиция: строка {row+1}, столбец {self.headers[col]}")
             return True
         return False
 
@@ -84,9 +85,9 @@ class Table:
             # Если удалили последнюю строку, создаем новую пустую
             if not self.data:
                 self.new_row()
-            logger.info(f"Удалена строка {row + 1}")
+            self.logger.info(f"Удалена строка {row + 1}")
             return True
-        logger.warning(f"Неверный индекс строки {row} для удаления")
+        self.logger.warning(f"Неверный индекс строки {row} для удаления")
         return False
 
     def insert_row(self, row: int) -> bool:
@@ -97,9 +98,9 @@ class Table:
             if row <= self.current_row:
                 self.current_row += 1
 
-            logger.info(f"Вставлена новая строка перед позицией {row + 1}")
+            self.logger.info(f"Вставлена новая строка перед позицией {row + 1}")
             return True
-        logger.warning(f"Неверный индекс строки {row} для вставки")
+        self.logger.warning(f"Неверный индекс строки {row} для вставки")
         return False
 
     def save_to_csv(self, filename: str = None):
@@ -113,4 +114,4 @@ class Table:
             writer = csv.writer(f)
             writer.writerow(self.headers)
             writer.writerows(save_data)
-        logger.info(f"Таблица сохранена в файл {filename}")
+        self.logger.info(f"Таблица сохранена в файл {filename}")

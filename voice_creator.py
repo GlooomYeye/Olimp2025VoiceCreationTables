@@ -14,7 +14,7 @@ class VoiceTableCreator:
     def __init__(self):
         """Инициализация VoiceTableCreator с настройкой логирования, Vosk и PyAudio."""
         self.logger = logging.getLogger(__name__)
-        setup_logging()
+        setup_logging(console_output=False)  # Отключаем вывод логов в консоль
         self.logger.info("Инициализация Voice Table Creator")
 
         # Инициализация модели распознавания речи
@@ -58,9 +58,10 @@ class VoiceTableCreator:
         except ValueError:
             return text
 
-    def listen_command(self) -> str:
+    def listen_command(self, show_listening: bool = True) -> str:
         """Слушает голосовую команду и возвращает распознанный текст."""
-        print("\nСлушаю...")
+        if show_listening:
+            print("\nСлушаю...")
         self.rec.Reset()
         while True:
             data = self.stream.read(4000, exception_on_overflow=False)
@@ -113,7 +114,7 @@ class VoiceTableCreator:
     def create_table(self, name: str, headers: List[str]):
         """Создаёт новую таблицу с указанным именем и заголовками."""
         prev_table = self.table
-        self.table = Table(name, headers)
+        self.table = Table(name, headers, console_output=False)  # Отключаем вывод логов в консоль для таблицы
         self.history.append(("create", prev_table))
         print(f"\nСоздана таблица '{name}' со следующими столбцами:")
         print(", ".join(headers))
@@ -256,11 +257,12 @@ class VoiceTableCreator:
                 print("Пауза. Для продолжения скажите 'продолжить'.")
                 self.logger.info("Вход в режим паузы")
                 while True:
-                    pause_cmd = self.listen_command().lower()
-                    print(f"Распознано (пауза): {pause_cmd}")
+                    pause_cmd = self.listen_command(show_listening=False).lower()
                     if "продолжить" in pause_cmd or "продолжай" in pause_cmd:
                         print("Продолжаю заполнение таблицы.")
                         self.logger.info("Выход из режима паузы")
+                        if self.table:
+                            self.table.display()
                         break
 
             elif "выход" in command:
