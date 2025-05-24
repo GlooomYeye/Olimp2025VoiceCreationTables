@@ -26,14 +26,16 @@ class Table:
 
     def new_row(self):
         """Добавляет новую строку в таблицу"""
-        self.data.append(['_' for _ in range(len(self.headers))])
+        self.data.append(["_" for _ in range(len(self.headers))])
         logger.debug(f"Добавлена новая строка {self.current_row + 1}")
 
     def set_current_value(self, value: str, history_callback=None) -> bool:
         if self.current_col < len(self.headers):
             self.data[self.current_row][self.current_col] = value
-            logger.info(f"Записано значение '{value}' в ячейку [строка {self.current_row + 1}, {self.headers[self.current_col]}]")
-            if value != '_': 
+            logger.info(
+                f"Записано значение '{value}' в ячейку [строка {self.current_row + 1}, {self.headers[self.current_col]}]"
+            )
+            if value != "_":
                 self.last_filled_position = (self.current_row, self.current_col)
             self.current_col += 1
             if self.current_col >= len(self.headers):
@@ -41,7 +43,7 @@ class Table:
                 prev_col = self.current_col
                 self.next_row()
                 if history_callback:
-                    history_callback(('next_row', prev_row, prev_col))
+                    history_callback(("next_row", prev_row, prev_col))
             return True
         return False
 
@@ -54,11 +56,13 @@ class Table:
 
     def display(self):
         display_data = self.data
-        if self.current_col == 0 and len(self.data) > self.current_row + 1 and all(val == '_' for val in self.data[-1]):
+        if self.current_col == 0 and len(self.data) > self.current_row + 1 and all(val == "_" for val in self.data[-1]):
             display_data = self.data[:-1]
         print(f'\nТаблица "{self.name}":')
-        print(tabulate(display_data, headers=self.headers, showindex=[f'Строка {i+1}' for i in range(len(display_data))]))
-        print(f'\nТекущая позиция: Строка {self.current_row + 1}, {self.headers[self.current_col]}')
+        print(
+            tabulate(display_data, headers=self.headers, showindex=[f"Строка {i+1}" for i in range(len(display_data))])
+        )
+        print(f"\nТекущая позиция: Строка {self.current_row + 1}, {self.headers[self.current_col]}")
         print()
 
     def set_position(self, row: int, col: int) -> bool:
@@ -70,7 +74,7 @@ class Table:
             logger.info(f"Установлена позиция: строка {row+1}, столбец {self.headers[col]}")
             return True
         return False
-        
+
     def delete_row(self, row: int) -> bool:
         """Удаляет указанную строку из таблицы"""
         if 0 <= row < len(self.data):
@@ -84,14 +88,15 @@ class Table:
             return True
         logger.warning(f"Неверный индекс строки {row} для удаления")
         return False
+
     def insert_row(self, row: int) -> bool:
         """Вставляет новую строку перед указанной позицией"""
         if 0 <= row <= len(self.data):
-            self.data.insert(row, ['_' for _ in range(len(self.headers))])
-            
+            self.data.insert(row, ["_" for _ in range(len(self.headers))])
+
             if row <= self.current_row:
                 self.current_row += 1
-                
+
             logger.info(f"Вставлена новая строка перед позицией {row + 1}")
             return True
         logger.warning(f"Неверный индекс строки {row} для вставки")
@@ -99,11 +104,12 @@ class Table:
 
     def save_to_csv(self, filename: str = None):
         import csv
+
         if filename is None:
-            filename = f'{self.name}.csv'
+            filename = f"{self.name}.csv"
         # Сохраняем без пустой последней строки
         save_data = self.data[:-1] if self.current_col == 0 else self.data
-        with open(filename, 'w', newline='', encoding='utf-8') as f:
+        with open(filename, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(self.headers)
             writer.writerows(save_data)

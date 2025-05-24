@@ -9,6 +9,7 @@ from table import Table
 from logging_config import setup_logging
 from constants import TEMPLATES
 
+
 class VoiceTableCreator:
     def __init__(self):
         """Инициализация VoiceTableCreator с настройкой логирования, Vosk и PyAudio."""
@@ -23,13 +24,7 @@ class VoiceTableCreator:
 
         # Инициализация PyAudio
         self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=16000,
-            input=True,
-            frames_per_buffer=8000
-        )
+        self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
         self.rec = KaldiRecognizer(self.model, 16000)
         self.last_filled_position = None
         self.logger.info("Voice Table Creator успешно инициализирован")
@@ -59,7 +54,7 @@ class VoiceTableCreator:
         """Преобразует текст, содержащий числа, в строку с числовыми значениями."""
         try:
             number = self.text_to_number(text)
-            return str(number).replace('.', ',')
+            return str(number).replace(".", ",")
         except ValueError:
             return text
 
@@ -96,7 +91,7 @@ class VoiceTableCreator:
             table_idx = words.index("таблицу") + 1
             columns_idx = words.index("столбцы") + 1
             if table_idx < columns_idx and table_idx < len(words):
-                table_name = " ".join(words[table_idx:columns_idx-1])
+                table_name = " ".join(words[table_idx : columns_idx - 1])
                 headers = words[columns_idx:]
                 self.logger.debug(f"Извлечено: таблица '{table_name}', столбцы {headers}")
                 return table_name, headers
@@ -119,7 +114,7 @@ class VoiceTableCreator:
         """Создаёт новую таблицу с указанным именем и заголовками."""
         prev_table = self.table
         self.table = Table(name, headers)
-        self.history.append(('create', prev_table))
+        self.history.append(("create", prev_table))
         print(f"\nСоздана таблица '{name}' со следующими столбцами:")
         print(", ".join(headers))
         self.table.display()
@@ -143,7 +138,7 @@ class VoiceTableCreator:
         prev_value = self.table.data[prev_row][prev_col]
 
         if self.table.set_current_value(value_converted, history_callback=lambda action: self.history.append(action)):
-            self.history.append(('set', prev_row, prev_col, prev_value))
+            self.history.append(("set", prev_row, prev_col, prev_value))
             self.table.display()
             return True
         return False
@@ -158,7 +153,7 @@ class VoiceTableCreator:
         prev_row = self.table.current_row
         prev_col = self.table.current_col
         if self.table.next_row():
-            self.history.append(('next_row', prev_row, prev_col))
+            self.history.append(("next_row", prev_row, prev_col))
             self.table.display()
 
     def skip_cell(self):
@@ -170,7 +165,9 @@ class VoiceTableCreator:
 
         if self.table.current_col < len(self.table.headers):
             self.set_value("_")
-            self.logger.info(f"Пропущена ячейка [строка {self.table.current_row + 1}, {self.table.headers[self.table.current_col]}]")
+            self.logger.info(
+                f"Пропущена ячейка [строка {self.table.current_row + 1}, {self.table.headers[self.table.current_col]}]"
+            )
 
     def undo_last_action(self):
         """Отменяет последнее действие."""
@@ -182,30 +179,32 @@ class VoiceTableCreator:
         action = self.history.pop()
         self.logger.info(f"Отмена действия: {action[0]}")
 
-        if action[0] == 'create':
+        if action[0] == "create":
             self.table = action[1]
-        elif action[0] == 'set':
+        elif action[0] == "set":
             row, col, prev_value = action[1], action[2], action[3]
             self.table.data[row][col] = prev_value
             self.table.current_row = row
             self.table.current_col = col
-            self.logger.info(f"Восстановлено значение '{prev_value}' в ячейку [строка {row + 1}, {self.table.headers[col]}]")
-        elif action[0] == 'next_row':
+            self.logger.info(
+                f"Восстановлено значение '{prev_value}' в ячейку [строка {row + 1}, {self.table.headers[col]}]"
+            )
+        elif action[0] == "next_row":
             prev_row, prev_col = action[1], action[2]
             self.table.current_row = prev_row
             self.table.current_col = prev_col
             # Удаляем последнюю пустую строку, если она существует и не нужна
-            if len(self.table.data) > prev_row + 1 and all(val == '_' for val in self.table.data[-1]):
+            if len(self.table.data) > prev_row + 1 and all(val == "_" for val in self.table.data[-1]):
                 self.table.data.pop()
             self.logger.info(f"Возврат к строке {prev_row + 1}")
-        elif action[0] == 'delete_row':
+        elif action[0] == "delete_row":
             row, row_data = action[1], action[2]
             self.table.data.insert(row, row_data)
             if row <= self.table.current_row:
                 self.table.current_row += 1
             self.logger.info(f"Восстановлена удаленная строка {row + 1}")
 
-        elif action[0] == 'insert_row':
+        elif action[0] == "insert_row":
             row = action[1]
             self.table.data.pop(row)
             if row < self.table.current_row:
@@ -214,7 +213,11 @@ class VoiceTableCreator:
 
         if self.table:
 
-            if self.table.current_col == 0 and len(self.table.data) > self.table.current_row + 1 and all(val == '_' for val in self.table.data[self.table.current_row]):
+            if (
+                self.table.current_col == 0
+                and len(self.table.data) > self.table.current_row + 1
+                and all(val == "_" for val in self.table.data[self.table.current_row])
+            ):
                 self.table.data.pop()
                 self.table.current_row -= 1
             self.table.display()
@@ -222,18 +225,18 @@ class VoiceTableCreator:
     def print_help(self):
         """Выводит список доступных команд."""
         print("\nДоступные команды:")
-        print('- создай таблицу [название] столбцы [названия столбцов]')
-        print('- создай таблицу шаблон [номер] (доступные шаблоны: 1, 2, 3)')
-        print('- следующая строка')
-        print('- отмена')
-        print('- пропусти (пропуск текущей ячейки)')
-        print('- сохрани')
-        print('- выход')
-        print('- редактировать строка [номер] столбец [название]')
-        print('- удалить строка [номер]')
-        print('- вставь строка [номер]')
-        print('- вернуться')
-        print('- помощь (показать этот список)')
+        print("- создай таблицу [название] столбцы [названия столбцов]")
+        print("- создай таблицу шаблон [номер] (доступные шаблоны: 1, 2, 3)")
+        print("- следующая строка")
+        print("- отмена")
+        print("- пропусти (пропуск текущей ячейки)")
+        print("- сохрани")
+        print("- выход")
+        print("- редактировать строка [номер] столбец [название]")
+        print("- удалить строка [номер]")
+        print("- вставь строка [номер]")
+        print("- вернуться")
+        print("- помощь (показать этот список)")
         print("\nПросто произносите значения для заполнения текущей ячейки")
 
     def run(self):
@@ -291,7 +294,7 @@ class VoiceTableCreator:
 
             elif "отмена" in command:
                 self.undo_last_action()
-            
+
             elif "вставь строку" in command or "вставить строку" in command:
                 row_num = self.extract_number(command, "строка")
                 if row_num is None:
@@ -300,7 +303,7 @@ class VoiceTableCreator:
 
                 if self.table and 1 <= row_num <= len(self.table.data) + 1:
                     if self.table.insert_row(row_num - 1):
-                        self.history.append(('insert_row', row_num - 1))
+                        self.history.append(("insert_row", row_num - 1))
                         print(f"Вставлена новая строка перед строкой {row_num}")
                         self.table.display()
                 else:
@@ -308,9 +311,9 @@ class VoiceTableCreator:
 
             elif "сохрани" in command:
                 if self.table:
-                    filename = f'{self.table.name}.csv'
+                    filename = f"{self.table.name}.csv"
                     self.table.save_to_csv()
-                    print(f'Таблица сохранена в файл {filename}')
+                    print(f"Таблица сохранена в файл {filename}")
                     self.table = None
                     print("\nМожете создать новую таблицу")
                 else:
@@ -337,8 +340,11 @@ class VoiceTableCreator:
                                 new_value = self.listen_command()
                                 if new_value:
                                     prev_value = self.table.data[row_num - 1][col]
-                                    self.table.set_current_value(self.words_to_number(new_value), history_callback=lambda action: self.history.append(action))
-                                    self.history.append(('set', row_num - 1, col, prev_value))
+                                    self.table.set_current_value(
+                                        self.words_to_number(new_value),
+                                        history_callback=lambda action: self.history.append(action),
+                                    )
+                                    self.history.append(("set", row_num - 1, col, prev_value))
                                     self.table.display()
                             else:
                                 print(f"Невозможно редактировать: неверная позиция")
@@ -359,7 +365,7 @@ class VoiceTableCreator:
                         print("Ошибка: неверная позиция для возврата")
                 else:
                     print("Нет сохранённой позиции для возврата")
-                    
+
             elif "удалить строка" in command:
                 row_num = self.extract_number(command, "строка")
                 if row_num is None:
@@ -369,7 +375,7 @@ class VoiceTableCreator:
                 if self.table and 1 <= row_num <= len(self.table.data):
                     row_data = self.table.data[row_num - 1].copy()
                     if self.table.delete_row(row_num - 1):
-                        self.history.append(('delete_row', row_num - 1, row_data))
+                        self.history.append(("delete_row", row_num - 1, row_data))
                         print(f"Строка {row_num} удалена")
                         self.table.display()
                 else:
