@@ -7,9 +7,11 @@ def setup_logging(console_output=True):
 
     logs_dir = "logs"
     os.makedirs(logs_dir, exist_ok=True)
-    log_filename = os.path.join(logs_dir, f'voice_table_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+    log_filename = os.path.join(logs_dir, 'voice_table.log')
     
-    handlers = [logging.FileHandler(log_filename, encoding="utf-8")]
+    logger = logging.getLogger(__name__)
+    if not logger.handlers:
+        handlers = [logging.FileHandler(log_filename, encoding="utf-8")]
     if console_output:
         handlers.append(logging.StreamHandler())
     
