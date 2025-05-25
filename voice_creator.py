@@ -235,7 +235,7 @@ class VoiceTableCreator:
         print("- выход")
         print("- редактировать строка [номер] столбец [название]")
         print("- удалить строка [номер]")
-        print("- вставь строка [номер]")
+        print("- вставить строка [номер]")
         print("- вернуться")
         print("- помощь (показать этот список)")
         print("\nПросто произносите значения для заполнения текущей ячейки")
@@ -297,7 +297,7 @@ class VoiceTableCreator:
             elif "отмена" in command:
                 self.undo_last_action()
 
-            elif "вставь строку" in command or "вставить строку" in command:
+            elif "вставь строка" in command or "вставить строка" in command:
                 row_num = self.extract_number(command, "строка")
                 if row_num is None:
                     print("Не удалось распознать номер строки")
@@ -357,7 +357,7 @@ class VoiceTableCreator:
                 except ValueError:
                     print("Неверный формат команды редактирования")
 
-            elif "вернуться" in command or "назад" in command:
+            elif "вернуться" in command or "назад" in command or "вернись" in command:
                 if self.table and self.table.previous_position:
                     row, col = self.table.previous_position
                     if self.table.set_position(row, col):
